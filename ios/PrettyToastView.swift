@@ -29,7 +29,7 @@ struct PrettyToastView: View {
             ZStack {
                 toastBackground()
                     .overlay {
-                        ToastContent(haveDynamicIsland, expandedWidth: expandedWidth, hasOverflow: overflow > 0)
+                        ToastContent(haveDynamicIsland, expandedWidth: expandedWidth, islandHeight: dynamicIslandHeight)
                             .frame(width: expandedWidth, height: expandedHeight)
                             .scaleEffect(x: scaleX, y: scaleY)
                     }
@@ -64,14 +64,9 @@ struct PrettyToastView: View {
     }
 
     @ViewBuilder
-    func ToastContent(_ haveDynamicIsland: Bool, expandedWidth: CGFloat, hasOverflow: Bool) -> some View {
+    func ToastContent(_ haveDynamicIsland: Bool, expandedWidth: CGFloat, islandHeight: CGFloat) -> some View {
         if let toast = window.toast {
-            let pushBelowIsland = haveDynamicIsland && (!toast.message.isEmpty || hasOverflow)
             VStack(spacing: 0) {
-                if pushBelowIsland {
-                    Spacer(minLength: 0)
-                }
-
                 HStack(spacing: 10) {
                     ToastIconView(toast: toast, isExpanded: isExpanded)
                         .frame(width: 50)
@@ -107,7 +102,13 @@ struct PrettyToastView: View {
                 }
             }
             .padding(.horizontal, 20)
-            .padding(.bottom, pushBelowIsland ? 12 : 0)
+            // Reserve the island band at the top so the content is always laid out
+            // in the visible area beneath it. The enclosing fixed-height frame
+            // centers this padded box, which — because the insets are asymmetric —
+            // centers the content within [islandHeight, height - 12] for short
+            // content and lets it fill that band exactly once it overflows.
+            .padding(.top, haveDynamicIsland ? islandHeight : 0)
+            .padding(.bottom, haveDynamicIsland ? 12 : 0)
             .compositingGroup()
             .blur(radius: isExpanded ? 0 : 5)
             .opacity(isExpanded ? 1 : 0)
