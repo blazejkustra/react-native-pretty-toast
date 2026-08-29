@@ -66,85 +66,92 @@ struct PrettyToastView: View {
     @ViewBuilder
     func ToastContent(_ haveDynamicIsland: Bool, expandedWidth: CGFloat, islandHeight: CGFloat) -> some View {
         if let toast = window.toast {
-            VStack(spacing: 0) {
-                HStack(spacing: 10) {
-                    ToastIconView(toast: toast, isExpanded: isExpanded)
-                        .frame(width: 50)
+            contentRow(toast, measuring: false)
+                // Reserve the island band at the top so the content is always laid out
+                // in the visible area beneath it. The enclosing fixed-height frame
+                // centers this padded box, which — because the insets are asymmetric —
+                // centers the content within [islandHeight, height - 12] for short
+                // content and lets it fill that band exactly once it overflows.
+                .padding(.top, haveDynamicIsland ? islandHeight : 0)
+                .padding(.bottom, haveDynamicIsland ? 12 : 0)
+                .compositingGroup()
+                .blur(radius: isExpanded ? 0 : 5)
+                .opacity(isExpanded ? 1 : 0)
 
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(toast.title)
-                            .font(.callout)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(.white)
-
-                        if !toast.message.isEmpty {
-                            Text(toast.message)
-                                .font(.caption)
-                                .foregroundColor(.white.opacity(0.6))
-                        }
+            // Hidden measurer — drives measuredContentHeight so the pill grows for
+            // overflowing text. It renders the SAME row as the visible copy: measuring a
+            // different layout than the one on screen is what used to truncate messages.
+            contentRow(toast, measuring: true)
+                .fixedSize(horizontal: false, vertical: true)
+                .background(
+                    GeometryReader { geo in
+                        Color.clear.preference(
+                            key: ContentHeightKey.self,
+                            value: geo.size.height
+                        )
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                    if let label = toast.actionLabel, !label.isEmpty {
-                        Button(action: { window.actionTapped = true }) {
-                            Text(label)
-                                .font(.footnote)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(toast.accentColor)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(
-                                    Capsule().fill(Color.white.opacity(0.12))
-                                )
-                        }
-                        .buttonStyle(.plain)
-                    }
+                )
+                .hidden()
+                .allowsHitTesting(false)
+                .onPreferenceChange(ContentHeightKey.self) { height in
+                    measuredContentHeight = height
                 }
-            }
-            .padding(.horizontal, 20)
-            // Reserve the island band at the top so the content is always laid out
-            // in the visible area beneath it. The enclosing fixed-height frame
-            // centers this padded box, which — because the insets are asymmetric —
-            // centers the content within [islandHeight, height - 12] for short
-            // content and lets it fill that band exactly once it overflows.
-            .padding(.top, haveDynamicIsland ? islandHeight : 0)
-            .padding(.bottom, haveDynamicIsland ? 12 : 0)
-            .compositingGroup()
-            .blur(radius: isExpanded ? 0 : 5)
-            .opacity(isExpanded ? 1 : 0)
+        }
+    }
 
-            // Hidden measurer — drives measuredContentHeight so the pill grows
-            // for overflowing text.
-            HStack(spacing: 10) {
+    /// The one row layout, used both to draw the toast and to measure how tall it needs to
+    /// be. Keeping them in one place is the point: when the measurer was a separate copy it
+    /// left out the action button, so it sized the text against a column ~90pt wider than
+    /// the text actually gets. A message that wraps to three lines next to a button was
+    /// measured at two, the pill came up a line short, and the text was clipped.
+    @ViewBuilder
+    private func contentRow(_ toast: Toast, measuring: Bool) -> some View {
+        HStack(spacing: 10) {
+            // Only the width matters for measurement, and drawing the icon twice would run
+            // its symbol animation twice.
+            if measuring {
                 Color.clear.frame(width: 50, height: 1)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(toast.title)
-                        .font(.callout)
-                        .fontWeight(.semibold)
-
-                    if !toast.message.isEmpty {
-                        Text(toast.message)
-                            .font(.caption)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                ToastIconView(toast: toast, isExpanded: isExpanded)
+                    .frame(width: 50)
             }
-            .padding(.horizontal, 20)
-            .fixedSize(horizontal: false, vertical: true)
-            .background(
-                GeometryReader { geo in
-                    Color.clear.preference(
-                        key: ContentHeightKey.self,
-                        value: geo.size.height
-                    )
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(toast.title)
+                    .font(.callout)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.white)
+                    // Without this the enclosing fixed-height frame may clamp the text
+                    // rather than let it report the height it actually wants — which
+                    // truncated even single-line strings when the frame was a point short.
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if !toast.message.isEmpty {
+                    Text(toast.message)
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.6))
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-            )
-            .hidden()
-            .onPreferenceChange(ContentHeightKey.self) { height in
-                measuredContentHeight = height
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            if let label = toast.actionLabel, !label.isEmpty {
+                Button(action: { window.actionTapped = true }) {
+                    Text(label)
+                        .font(.footnote)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(toast.accentColor)
+                        .fixedSize(horizontal: true, vertical: false)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(
+                            Capsule().fill(Color.white.opacity(0.12))
+                        )
+                }
+                .buttonStyle(.plain)
             }
         }
+        .padding(.horizontal, 20)
     }
 
     private func toastBackground() -> some View {
