@@ -1,6 +1,6 @@
 {
   "name": "react-native-pretty-toast",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "React Native Toast but more capable",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
