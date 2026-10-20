@@ -13,19 +13,19 @@
     "build:web": "expo export --platform web"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~56.0.14",
-    "expo": "~56.0.9",
-    "expo-splash-screen": "~56.0.10",
-    "expo-status-bar": "~56.0.4",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "react-native": "0.85.3",
-    "react-native-web": "~0.21.0"
+    "@expo/metro-runtime": "~58.0.14",
+    "expo": "~58.0.16",
+    "expo-splash-screen": "~58.0.10",
+    "expo-status-bar": "~58.0.3",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-native": "0.88.0",
+    "react-native-web": "^0.21.4"
   },
   "private": true,
   "devDependencies": {
-    "expo-dev-client": "~56.0.19",
-    "react-native-builder-bob": "^0.41.0",
-    "react-native-monorepo-config": "^0.3.3"
+    "expo-dev-client": "~58.0.14",
+    "react-native-builder-bob": "^0.43.2",
+    "react-native-monorepo-config": "^0.4.0"
   }
 }
