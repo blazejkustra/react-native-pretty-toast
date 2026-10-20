@@ -1,9 +1,5 @@
 import { codegenNativeComponent } from 'react-native';
-import type { ColorValue, ViewProps } from 'react-native';
-import type {
-  BubblingEventHandler,
-  Int32,
-} from 'react-native/Libraries/Types/CodegenTypes';
+import type { CodegenTypes, ColorValue, ViewProps } from 'react-native';
 
 export interface NativeProps extends ViewProps {
   visible: boolean;
@@ -13,7 +9,7 @@ export interface NativeProps extends ViewProps {
   iconUri?: string;
   title?: string;
   message?: string;
-  duration?: Int32;
+  duration?: CodegenTypes.Int32;
   autoDismiss?: boolean;
   enableSwipeDismiss?: boolean;
   useDynamicIsland?: boolean;
@@ -21,10 +17,10 @@ export interface NativeProps extends ViewProps {
   strokeColor?: ColorValue;
   disableBackdropSampling?: boolean;
   actionLabel?: string;
-  onToastDismiss?: BubblingEventHandler<null>;
-  onToastShow?: BubblingEventHandler<null>;
-  onToastPress?: BubblingEventHandler<null>;
-  onToastActionPress?: BubblingEventHandler<null>;
+  onToastDismiss?: CodegenTypes.BubblingEventHandler<null>;
+  onToastShow?: CodegenTypes.BubblingEventHandler<null>;
+  onToastPress?: CodegenTypes.BubblingEventHandler<null>;
+  onToastActionPress?: CodegenTypes.BubblingEventHandler<null>;
 }
 
 export default codegenNativeComponent<NativeProps>('ToastView');
