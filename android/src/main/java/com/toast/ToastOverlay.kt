@@ -220,7 +220,11 @@ class ToastOverlay(activity: Activity) {
         cutoutAnimator?.cancelPendingCallbacks()
 
         val decorView = activity?.window?.decorView as? ViewGroup
-        views?.container?.let { decorView?.removeView(it) }
+        views?.container?.let { container ->
+            decorView?.post {
+                if (container.parent === decorView) decorView.removeView(container)
+            }
+        }
 
         imageLoader.shutdownNow()
         iconCache.evictAll()
