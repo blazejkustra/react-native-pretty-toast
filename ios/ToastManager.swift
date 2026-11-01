@@ -38,7 +38,12 @@ import UIKit
         let isFirstShow = overlayWindow == nil
         ensureOverlayWindow()
 
-        guard let overlayWindow else { return }
+        guard let overlayWindow else {
+            DispatchQueue.main.async { [weak self] in
+                self?.onDismiss?()
+            }
+            return
+        }
 
         let (primary, secondary) = iconColors(for: icon)
         let accent = accentColor.map { Color($0) }
@@ -166,9 +171,9 @@ import UIKit
     // MARK: - Overlay Window
 
     private func ensureOverlayWindow() {
-        guard let windowScene = UIApplication.shared.connectedScenes
-            .compactMap({ $0 as? UIWindowScene })
-            .first(where: { $0.activationState == .foregroundActive }) else { return }
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        guard let windowScene = scenes.first(where: { $0.activationState == .foregroundActive })
+            ?? scenes.first(where: { $0.activationState == .foregroundInactive }) else { return }
 
         if let existing = windowScene.windows.first(where: { $0.tag == 1009 }) as? PassThroughWindow {
             overlayWindow = existing
